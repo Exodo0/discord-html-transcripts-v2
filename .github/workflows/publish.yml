@@ -1,0 +1,51 @@
+name: Publish Node.js Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Validate tag matches package version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Resolve NPM dist-tag
+        id: dist_tag
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == *"-beta."* || "${GITHUB_REF_NAME}" == *"-beta" ]]; then
+            echo "value=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish package to NPM
+        run: npm publish --access public --tag ${{ steps.dist_tag.outputs.value }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

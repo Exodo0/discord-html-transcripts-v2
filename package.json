@@ -1,0 +1,87 @@
+{
+  "name": "discord-html-transcripts-v2",
+  "version": "3.3.0",
+  "description": "A nicely formatted html transcript generator for discord.js.",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/Exodo0/discord-html-transcripts-v2",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "test:typescript": "ts-node ./tests/generate.ts",
+    "test:send-components-v2": "ts-node ./tests/components-v2-send.ts",
+    "lint": "prettier --write --cache . && eslint --cache --fix .",
+    "typecheck": "tsc -p tsconfig.eslint.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Exodo0/discord-html-transcripts-v2.git"
+  },
+  "keywords": [
+    "discord.js",
+    "discord.js-transcripts",
+    "discord.js-html-transcripts",
+    "html-transcripts",
+    "discord-html-transcripts",
+    "discord-html-transcripts-v2",
+    "discord-transcripts"
+  ],
+  "author": "Exodo0",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.js.map"
+  ],
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.3",
+    "@types/debug": "^4.1.12",
+    "@types/node": "^24.10.13",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "debug": "^4.4.3",
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.3.1",
+    "eslint": "^9.39.3",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.8.1",
+    "pretty-quick": "^4.2.2",
+    "sharp": "^0.34.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@derockdev/discord-components-core": "^3.6.1",
+    "@derockdev/discord-components-react": "^3.6.1",
+    "discord-markdown-parser": "~1.2.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "simple-markdown": "^0.7.3",
+    "twemoji": "^14.0.2",
+    "undici": "^7.22.0"
+  },
+  "peerDependencies": {
+    "discord.js": "^14.0.0 || ^15.0.0"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "react": "$react",
+        "react-dom": "$react-dom"
+      }
+    }
+  },
+  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
+}
