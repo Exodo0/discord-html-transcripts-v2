@@ -11,12 +11,9 @@ function SectionAccessory({ children }: SectionAccessoryProps) {
     <div
       style={{
         display: 'flex',
-        width: 'auto',
-        minWidth: '84px',
-        justifyContent: 'flex-end',
-        alignItems: 'flex-start',
-        marginLeft: '12px',
         flexShrink: 0,
+        alignItems: 'flex-start',
+        justifyContent: 'flex-end',
       }}
     >
       {children}

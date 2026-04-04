@@ -58,9 +58,9 @@ export default async function DiscordMessages({ messages, channel, callbacks, ..
           : `Exported ${messages.length} message${messages.length > 1 ? 's' : ''}.`}{' '}
         {options.poweredBy ? (
           <span style={{ textAlign: 'center' }}>
-            Powered by{' '}
-            <a href="https://github.com/ItzDerock/discord-html-transcripts" style={{ color: 'lightblue' }}>
-              discord-html-transcripts
+            Powered by: {' '}
+            <a href="https://github.com/Exodo0/discord-html-transcripts-v2" style={{ color: 'lightblue' }}>
+              https://github.com/Exodo0/discord-html-transcripts-v2
             </a>
             .
           </span>

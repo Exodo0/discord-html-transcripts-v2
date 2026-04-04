@@ -17,11 +17,18 @@ function DiscordSection({ children, accessory, id }: DiscordSectionProps) {
         display: 'flex',
         flexDirection: 'row',
         width: '100%',
-        maxWidth: '500px',
+        padding: '12px 16px',
+        boxSizing: 'border-box',
+        alignItems: 'flex-start',
+        gap: '12px',
       }}
     >
       <SectionContent>{children}</SectionContent>
-      <SectionAccessory>{accessory && <Component component={accessory} id={id} />}</SectionAccessory>
+      {accessory && (
+        <SectionAccessory>
+          <Component component={accessory} id={id} />
+        </SectionAccessory>
+      )}
     </div>
   );
 }

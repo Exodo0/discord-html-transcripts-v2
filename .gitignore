@@ -179,3 +179,10 @@ dist
 # End of https://www.toptal.com/developers/gitignore/api/node,macos
 
 discord-html-transcripts-*.tgz
+
+# Keep the local bot example in the repo, but never commit its secret env file.
+!BotExample/
+!BotExample/**
+BotExample/.env
+BotExample/output/*
+!BotExample/output/.gitkeep

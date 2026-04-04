@@ -12,41 +12,43 @@ function DiscordMediaGallery({ component }: { component: MediaGalleryComponent }
   const hasMore = component.items.length > 10;
 
   return (
-    <div style={getGalleryLayout(count)}>
-      {imagesToShow.map((media, idx) => (
-        <div key={idx} style={getImageStyle(idx, count)}>
-          <img
-            src={media.media.url}
-            alt={media.description || 'Media content'}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
-          />
-          {hasMore && idx === imagesToShow.length - 1 && (
-            <div
+    <div style={{ padding: '0 16px 12px', boxSizing: 'border-box' }}>
+      <div style={getGalleryLayout(count)}>
+        {imagesToShow.map((media, idx) => (
+          <div key={idx} style={{ ...getImageStyle(idx, count), borderRadius: '4px', overflow: 'hidden' }}>
+            <img
+              src={media.media.url}
+              alt={media.description || 'Media content'}
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
                 width: '100%',
                 height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                color: 'white',
-                fontSize: '20px',
-                fontWeight: 'bold',
+                objectFit: 'cover',
+                display: 'block',
               }}
-            >
-              +{component.items.length - 10}
-            </div>
-          )}
-        </div>
-      ))}
+            />
+            {hasMore && idx === imagesToShow.length - 1 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  color: 'white',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                }}
+              >
+                +{component.items.length - 10}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

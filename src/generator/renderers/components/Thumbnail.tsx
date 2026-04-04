@@ -6,10 +6,12 @@ function DiscordThumbnail({ url }: { url: string }) {
       src={url}
       alt="Thumbnail"
       style={{
-        width: '85px',
-        height: '85px',
+        width: '80px',
+        height: '80px',
         objectFit: 'cover',
-        borderRadius: '8px',
+        borderRadius: '6px',
+        flexShrink: 0,
+        display: 'block',
       }}
     />
   );

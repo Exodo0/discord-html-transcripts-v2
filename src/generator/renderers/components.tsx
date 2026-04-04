@@ -48,7 +48,7 @@ export default function ComponentRow({
         >
           <>
             {component.components.map((nestedComponent, id) => (
-              <ComponentRow component={nestedComponent} id={id} key={id} context={context} />
+              <ContainerChild component={nestedComponent} id={id} key={id} context={context} />
             ))}
           </>
         </DiscordContainer>
@@ -100,6 +100,42 @@ export default function ComponentRow({
     default:
       return null;
   }
+}
+
+/**
+ * Renders a component that lives directly inside a Container (not top-level).
+ * ActionRows inside a Container get horizontal padding so buttons align with text.
+ */
+function ContainerChild({
+  component,
+  id,
+  context,
+}: {
+  component: TopLevelComponent;
+  id: number;
+  context: RenderMessageContext;
+}) {
+  // ActionRow inside a Container: wrap with padding to match Section content
+  if (component.type === ComponentType.ActionRow) {
+    return (
+      <div
+        key={id}
+        style={{
+          padding: '0 16px 12px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '8px',
+          alignItems: 'center',
+        }}
+      >
+        {component.components.map((nestedComponent, nestedId) => (
+          <Component component={nestedComponent} id={nestedId} key={nestedId} />
+        ))}
+      </div>
+    );
+  }
+
+  return <ComponentRow component={component} id={id} context={context} />;
 }
 
 export function Component({

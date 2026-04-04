@@ -10,9 +10,13 @@ function SectionContent({ children }: SectionContentProps) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        width: '100%',
+        flex: '1 1 auto',
         minWidth: 0,
-        gap: '6px',
+        gap: '4px',
+        color: '#dbdee1',
+        fontSize: '15px',
+        lineHeight: '1.375',
+        fontFamily: 'Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif',
       }}
     >
       {children}

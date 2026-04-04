@@ -1,13 +1,13 @@
 import type { CSSProperties } from 'react';
 import { ButtonStyle } from 'discord.js';
 
-// Container styles
+// Container styles (used in utils for gallery layouts)
 export const containerStyle = {
   display: 'grid',
   gap: '4px',
   width: '100%',
-  maxWidth: '500px',
-  borderRadius: '8px',
+  maxWidth: '100%',
+  borderRadius: '4px',
   overflow: 'hidden',
 } satisfies CSSProperties;
 
@@ -28,25 +28,12 @@ export const ButtonStyleMapping = {
 } as const;
 
 export const globalStyles = `
-  .discord-container {
-    display: grid;
-    gap: 4px;
-    width: 100%;
-    max-width: 500px;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .discord-base-image {
-    overflow: hidden;
-    position: relative;
-    background: #2b2d31;
-  }
+  /* ── Components V2 ──────────────────────────────────────────────────── */
 
   .discord-button {
     color: #ffffff !important;
     padding: 2px 16px;
-    border-radius: 8px;
+    border-radius: 4px;
     text-decoration: none !important;
     display: inline-flex;
     align-items: center;
@@ -62,23 +49,24 @@ export const globalStyles = `
     box-sizing: border-box;
     border: none;
     outline: none;
-    transition: background-color 0.2s ease;
+    user-select: none;
   }
 
   .discord-button-primary {
-    background-color: hsl(234.935 calc(1*85.556%) 64.706% /1);
+    background-color: #5865f2;
   }
 
   .discord-button-secondary {
-    background-color: hsl(240 calc(1*4%) 60.784% /0.12156862745098039);
+    background-color: #4e5058;
+    color: #ffffff !important;
   }
 
   .discord-button-success {
-    background-color: hsl(145.97 calc(1*100%) 26.275% /1);
+    background-color: #248046;
   }
 
   .discord-button-destructive {
-    background-color: hsl(355.636 calc(1*64.706%) 50% /1);
+    background-color: #da373c;
   }
 
   .discord-button-disabled {
@@ -88,28 +76,26 @@ export const globalStyles = `
   }
 
   .discord-select-menu {
-    margin-top: 2px;
-    margin-bottom: 2px;
     position: relative;
     width: 100%;
-    max-width: 500px;
+    max-width: 100%;
     height: 40px;
-    background-color: #2b2d31;
+    background-color: #1e1f22;
     border-radius: 4px;
-    color: #b5bac1;
+    color: #87898c;
     cursor: pointer;
     font-family: Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
     display: flex;
     align-items: center;
-    padding: 0 8px;
+    padding: 0 10px;
     justify-content: space-between;
     box-sizing: border-box;
-    border: 1px solid #1e1f22;
+    border: 1px solid rgba(255,255,255,0.06);
   }
 
   .discord-select-menu-disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;

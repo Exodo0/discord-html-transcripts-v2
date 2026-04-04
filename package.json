@@ -9,6 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p tsconfig.json",
     "prepack": "npm run build",
+    "bot:example": "ts-node -P BotExample/tsconfig.json BotExample/index.ts",
     "test:typescript": "ts-node ./tests/generate.ts",
     "test:send-components-v2": "ts-node ./tests/components-v2-send.ts",
     "lint": "prettier --write --cache . && eslint --cache --fix .",
