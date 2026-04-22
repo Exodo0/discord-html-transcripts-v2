@@ -24,6 +24,7 @@ export class TranscriptImageDownloader {
   private log = TranscriptImageDownloader.log;
 
   private maxFileSize?: number; // in kilobytes
+  private timeoutMs = 10_000;
   private compression?: {
     quality: number; // 1-100
     convertToWebP: boolean;
@@ -36,6 +37,17 @@ export class TranscriptImageDownloader {
    */
   withMaxSize(size: number) {
     this.maxFileSize = size;
+    return this;
+  }
+
+  /**
+   * Sets the timeout for downloading each image.
+   * If the timeout is reached, the original remote URL will be used instead.
+   * @param timeoutMs Timeout in milliseconds
+   */
+  withTimeout(timeoutMs: number) {
+    if (timeoutMs < 1) throw new Error('Timeout must be greater than 0');
+    this.timeoutMs = timeoutMs;
     return this;
   }
 
@@ -73,7 +85,9 @@ export class TranscriptImageDownloader {
 
       // fetch the image
       this.log(`Fetching attachment ${attachment.id}: ${attachment.url}`);
-      const response = await request(attachment.url).catch((err) => {
+      const response = await request(attachment.url, {
+        signal: AbortSignal.timeout(this.timeoutMs),
+      }).catch((err) => {
         console.error(`[discord-html-transcripts] Failed to download image for transcript: `, err);
         return null;
       });

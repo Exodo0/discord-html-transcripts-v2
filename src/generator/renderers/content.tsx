@@ -194,6 +194,30 @@ export async function MessageSingleASTNode({ node, context }: { node: SingleASTN
         </DiscordUnderlined>
       );
 
+    case 'heading': {
+      const content = <MessageASTNodes nodes={node.content} context={context} />;
+
+      if (context.type === RenderType.REPLY) {
+        return content;
+      }
+
+      if (node.level <= 2) {
+        return (
+          <>
+            <DiscordBold>{content}</DiscordBold>
+            <br />
+          </>
+        );
+      }
+
+      return (
+        <>
+          {content}
+          <br />
+        </>
+      );
+    }
+
     case 'strikethrough':
       return (
         <s>
