@@ -44,7 +44,9 @@ export default function ComponentRow({
       return (
         <DiscordContainer
           key={id}
-          accentColor={'accentColor' in component ? ((component.accentColor as number | undefined) ?? undefined) : undefined}
+          accentColor={
+            'accentColor' in component ? ((component.accentColor as number | undefined) ?? undefined) : undefined
+          }
         >
           <>
             {component.components.map((nestedComponent, id) => (
@@ -85,8 +87,10 @@ export default function ComponentRow({
     case ComponentType.Section:
       return (
         <DiscordSection key={id} accessory={component.accessory} id={id}>
-          {component.components.map((nestedComponent, id) => (
-            <ComponentRow component={nestedComponent} id={id} key={id} context={context} />
+          {/* Section children (TextDisplay, etc.) go through ContainerChild so each
+              type is rendered correctly with the right padding/context */}
+          {component.components.map((nestedComponent, nestedId) => (
+            <ContainerChild component={nestedComponent} id={nestedId} key={nestedId} context={context} />
           ))}
         </DiscordSection>
       );
@@ -170,6 +174,6 @@ export function Component({
       return <DiscordThumbnail key={id} url={component.media.url} />;
 
     default:
-      return undefined;
+      return null;
   }
 }

@@ -32,4 +32,3 @@ This module can format the following:
 
 Styles from [@derockdev/discord-components](https://github.com/ItzDerock/discord-components).
 Behind the scenes, this package uses React SSR to generate a static site.
-

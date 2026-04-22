@@ -4,5 +4,5 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src", "tests", "tsup.config.ts", "eslint.config.mjs"]
+  "include": ["src", "tests", "BotExample", "tsup.config.ts", "eslint.config.mjs"]
 }

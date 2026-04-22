@@ -1,14 +1,7 @@
 import { config } from 'dotenv';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import {
-  ChannelType,
-  Client,
-  GatewayIntentBits,
-  Guild,
-  TextBasedChannel,
-  type GuildBasedChannel,
-} from 'discord.js';
+import { ChannelType, Client, GatewayIntentBits, Guild, TextBasedChannel, type GuildBasedChannel } from 'discord.js';
 import { createTranscript, ExportReturnType } from '../src';
 
 config({ path: path.resolve(__dirname, '.env') });

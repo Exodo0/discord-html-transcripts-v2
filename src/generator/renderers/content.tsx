@@ -240,8 +240,7 @@ function renderUnknownContent(content: unknown, context: RenderContentContext): 
   // Some parser/plugin combinations can leak legacy React-element-like objects.
   // Recreate them with the active React runtime to avoid invalid-child errors.
   if (isLegacyElementLike(content)) {
-    const props =
-      content.props && typeof content.props === 'object' ? (content.props as Record<string, unknown>) : {};
+    const props = content.props && typeof content.props === 'object' ? (content.props as Record<string, unknown>) : {};
 
     return React.createElement(content.type, {
       ...props,

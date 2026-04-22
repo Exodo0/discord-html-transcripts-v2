@@ -14,6 +14,13 @@ import { globalStyles } from './renderers/components/styles';
  * @returns
  */
 export default async function DiscordMessages({ messages, channel, callbacks, ...options }: RenderMessageContext) {
+  // Pre-resolve all async DiscordMessage components before rendering.
+  // React's .map() inside JSX cannot handle Promises — async components must be
+  // awaited at the parent level and passed as already-resolved ReactNodes.
+  const renderedMessages = await Promise.all(
+    messages.map((message) => DiscordMessage({ message, context: { messages, channel, callbacks, ...options } }))
+  );
+
   return (
     <DiscordMessagesComponent style={{ minHeight: '100vh' }}>
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />;
@@ -45,10 +52,8 @@ export default async function DiscordMessages({ messages, channel, callbacks, ..
           `This is the start of #${channel.name} channel.`
         )}
       </DiscordHeader>
-      {/* body */}
-      {messages.map((message) => (
-        <DiscordMessage message={message} context={{ messages, channel, callbacks, ...options }} key={message.id} />
-      ))}
+      {/* body — already-resolved ReactNodes, no Promises in JSX */}
+      {renderedMessages}
       {/* footer */}
       <div style={{ textAlign: 'center', width: '100%' }}>
         {options.footerText
@@ -58,7 +63,7 @@ export default async function DiscordMessages({ messages, channel, callbacks, ..
           : `Exported ${messages.length} message${messages.length > 1 ? 's' : ''}.`}{' '}
         {options.poweredBy ? (
           <span style={{ textAlign: 'center' }}>
-            Powered by: {' '}
+            Powered by:{' '}
             <a href="https://github.com/Exodo0/discord-html-transcripts-v2" style={{ color: 'lightblue' }}>
               https://github.com/Exodo0/discord-html-transcripts-v2
             </a>
