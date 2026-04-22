@@ -56,6 +56,6 @@ describe('parseDiscordEmoji', () => {
     // Simple heart emoji \u2764
     const url = parseDiscordEmoji({ id: null, name: '\u2764' });
     expect(url).toContain('cdnjs.cloudflare.com/ajax/libs/twemoji');
-    expect(url).toEndWith('.svg');
+    expect(url.endsWith('.svg')).toBe(true);
   });
 });
