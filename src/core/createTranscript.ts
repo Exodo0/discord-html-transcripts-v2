@@ -47,9 +47,22 @@ export async function createTranscript<T extends ExportReturnType = ExportReturn
   // ── Pinned messages ────────────────────────────────────────────────────────
   if (includePinnedMessages) {
     try {
-      const pinned = await channel.messages.fetchPinned();
+      const messagesManager = channel.messages as unknown as {
+        fetchPins?: () => Promise<any>;
+        fetchPinned?: () => Promise<any>;
+      };
+      const pinnedFetcher =
+        typeof messagesManager.fetchPins === 'function'
+          ? messagesManager.fetchPins.bind(channel.messages)
+          : messagesManager.fetchPinned?.bind(channel.messages);
+
+      if (!pinnedFetcher) {
+        throw new TypeError('Could not find a pinned-message fetch method on MessageManager');
+      }
+
+      const pinned = await pinnedFetcher();
       const existingIds = new Set(allMessages.map((m) => m.id));
-      const newPinned = pinned.filter((m) => !existingIds.has(m.id));
+      const newPinned = pinned.filter((m: Message) => !existingIds.has(m.id));
       allMessages.push(...newPinned.values());
       log(`Included ${newPinned.size} additional pinned messages`);
     } catch {

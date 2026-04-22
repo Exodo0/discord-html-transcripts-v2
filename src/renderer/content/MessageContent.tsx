@@ -10,7 +10,8 @@ import {
   DiscordTime,
   DiscordUnderlined,
 } from '@derockdev/discord-components-react';
-import parse, { type RuleTypesExtended } from 'discord-markdown-parser';
+import * as DiscordMarkdownParser from 'discord-markdown-parser';
+import type { RuleTypesExtended } from 'discord-markdown-parser';
 import { ChannelType, type APIMessageComponentEmoji } from 'discord.js';
 import React from 'react';
 import type { ASTNode, SingleASTNode } from 'simple-markdown';
@@ -21,6 +22,23 @@ import debug from 'debug';
 const log = debug('discord-html-transcripts:content');
 
 type DiscordTimestampFormat = 't' | 'T' | 'd' | 'D' | 'f' | 'F' | 'R';
+type DiscordMarkdownParse = (input: string, type?: 'normal' | 'extended') => ASTNode;
+
+const parseMarkdown: DiscordMarkdownParse = (() => {
+  if (typeof DiscordMarkdownParser === 'function') {
+    return DiscordMarkdownParser as unknown as DiscordMarkdownParse;
+  }
+
+  if ('parse' in DiscordMarkdownParser && typeof DiscordMarkdownParser.parse === 'function') {
+    return DiscordMarkdownParser.parse as DiscordMarkdownParse;
+  }
+
+  if ('default' in DiscordMarkdownParser && typeof DiscordMarkdownParser.default === 'function') {
+    return DiscordMarkdownParser.default as DiscordMarkdownParse;
+  }
+
+  throw new TypeError('[discord-html-transcripts] Could not resolve discord-markdown-parser.');
+})();
 
 // ── Render mode ────────────────────────────────────────────────────────────
 
@@ -53,7 +71,7 @@ export default async function MessageContent({
       ? content.slice(0, 180) + '…'
       : content;
 
-  const parsed = parse(
+  const parsed = parseMarkdown(
     trimmed,
     context.type === RenderType.EMBED || context.type === RenderType.WEBHOOK ? 'extended' : 'normal'
   );

@@ -1,6 +1,6 @@
 {
   "name": "discord-html-transcripts-v2",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "A nicely formatted HTML transcript generator for discord.js — supports classic messages, embeds, and V2 Components (ContainerBuilder).",
   "homepage": "https://github.com/Exodo0/discord-html-transcripts-v2",
   "license": "Apache-2.0",
