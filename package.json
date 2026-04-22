@@ -1,19 +1,25 @@
 {
   "name": "discord-html-transcripts-v2",
-  "version": "3.3.6",
-  "description": "A nicely formatted html transcript generator for discord.js.",
-  "main": "dist/index.js",
+  "version": "4.0.0",
+  "description": "A nicely formatted HTML transcript generator for discord.js — supports classic messages, embeds, and V2 Components (ContainerBuilder).",
   "homepage": "https://github.com/Exodo0/discord-html-transcripts-v2",
+  "license": "Apache-2.0",
+  "author": "Exodo0",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.json",
-    "prepack": "npm run build",
-    "bot:example": "ts-node -P BotExample/tsconfig.json BotExample/index.ts",
-    "test:typescript": "ts-node ./tests/generate.ts",
-    "test:send-components-v2": "ts-node ./tests/components-v2-send.ts",
-    "lint": "prettier --write --cache . && eslint --cache --fix .",
-    "typecheck": "tsc -p tsconfig.eslint.json"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -21,49 +27,26 @@
   },
   "keywords": [
     "discord.js",
-    "discord.js-transcripts",
-    "discord.js-html-transcripts",
-    "html-transcripts",
+    "discord-transcripts",
     "discord-html-transcripts",
     "discord-html-transcripts-v2",
-    "discord-transcripts"
+    "html-transcripts",
+    "components-v2"
   ],
-  "author": "Exodo0",
-  "license": "Apache-2.0",
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "dist/**/*.js.map"
-  ],
-  "devDependencies": {
-    "@eslint/eslintrc": "3.3.5",
-    "@eslint/js": "10.0.1",
-    "@types/debug": "^4.1.13",
-    "@types/node": "^25.6.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "react": "19.2.5",
-    "react-dom": "19.2.5",
-    "@typescript-eslint/eslint-plugin": "^8.59.0",
-    "@typescript-eslint/parser": "^8.59.0",
-    "debug": "^4.4.3",
-    "discord.js": "14.26.3",
-    "dotenv": "^17.4.2",
-    "eslint": "^10.2.1",
-    "globals": "^17.5.0",
-    "husky": "^9.1.7",
-    "prettier": "^3.8.3",
-    "pretty-quick": "^4.2.2",
-    "sharp": "^0.34.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "prettier --write --cache . && eslint --cache --fix .",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "bot:example": "ts-node -P BotExample/tsconfig.json BotExample/index.ts"
   },
   "dependencies": {
     "@derockdev/discord-components-core": "^3.6.1",
     "@derockdev/discord-components-react": "^3.6.1",
+    "debug": "^4.4.3",
     "discord-markdown-parser": "~1.3.1",
     "simple-markdown": "^0.7.3",
     "twemoji": "^14.0.2",
@@ -75,12 +58,33 @@
     "react-dom": "^19.0.0"
   },
   "peerDependenciesMeta": {
-    "react": {
-      "optional": false
-    },
-    "react-dom": {
-      "optional": false
-    }
+    "react": { "optional": false },
+    "react-dom": { "optional": false }
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.5",
+    "@eslint/js": "10.0.1",
+    "@types/debug": "^4.1.13",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.0",
+    "@typescript-eslint/parser": "^8.59.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "discord.js": "14.26.3",
+    "dotenv": "^17.4.2",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.8.3",
+    "pretty-quick": "^4.2.2",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "sharp": "^0.34.5",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   },
   "pnpm": {
     "peerDependencyRules": {
@@ -88,7 +92,11 @@
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
       }
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
   },
   "packageManager": "pnpm@10.11.0"
 }

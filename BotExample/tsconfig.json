@@ -3,7 +3,10 @@
   "compilerOptions": {
     "incremental": false,
     "noEmit": true,
-    "rootDir": ".."
+    "rootDir": "..",
+    "allowImportingTsExtensions": true,
+    "module": "CommonJS",
+    "moduleResolution": "node"
   },
   "include": ["./index.ts", "../src/**/*.ts", "../src/**/*.tsx"]
 }

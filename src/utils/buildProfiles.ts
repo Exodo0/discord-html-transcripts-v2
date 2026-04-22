@@ -1,57 +1,60 @@
-import { type GuildMember, type Message, type User, UserFlags } from 'discord.js';
+import type { GuildMember, Message, User } from 'discord.js';
+import { UserFlags as UserFlagsEnum } from 'discord.js';
 
 export type Profile = {
-  author: string; // author of the message
-  avatar?: string; // avatar of the author
-  roleColor?: string; // role color of the author
-  roleIcon?: string; // role color of the author
-  roleName?: string; // role name of the author
-
-  bot?: boolean; // is the author a bot
-  verified?: boolean; // is the author verified
+  /** Display name of the author */
+  author: string;
+  /** Avatar URL (64px) */
+  avatar?: string;
+  /** Highest hoisted role colour */
+  roleColor?: string;
+  /** Highest hoisted role icon */
+  roleIcon?: string;
+  /** Highest hoisted role name */
+  roleName?: string;
+  /** Is this user a bot? */
+  bot?: boolean;
+  /** Is this user a verified bot? */
+  verified?: boolean;
 };
 
-export async function buildProfiles(messages: Message[]) {
+/**
+ * Builds a map of user-id → Profile for all authors found in a set of messages.
+ * Includes interaction users and thread last-message authors.
+ */
+export async function buildProfiles(messages: Message[]): Promise<Record<string, Profile>> {
   const profiles: Record<string, Profile> = {};
 
-  // loop through messages
   for (const message of messages) {
-    // add all users
-    const author = message.author;
+    const { author, member, interaction, thread } = message;
+
     if (!profiles[author.id]) {
-      // add profile
-      profiles[author.id] = buildProfile(message.member, author);
+      profiles[author.id] = buildProfile(member, author);
     }
 
-    // add interaction users
-    if (message.interaction) {
-      const user = message.interaction.user;
-      if (!profiles[user.id]) {
-        profiles[user.id] = buildProfile(null, user);
+    if (interaction && !profiles[interaction.user.id]) {
+      profiles[interaction.user.id] = buildProfile(null, interaction.user);
+    }
+
+    if (thread?.lastMessage) {
+      const { author: tAuthor, member: tMember } = thread.lastMessage;
+      if (!profiles[tAuthor.id]) {
+        profiles[tAuthor.id] = buildProfile(tMember, tAuthor);
       }
-    }
-
-    // threads
-    if (message.thread && message.thread.lastMessage) {
-      profiles[message.thread.lastMessage.author.id] = buildProfile(
-        message.thread.lastMessage.member,
-        message.thread.lastMessage.author
-      );
     }
   }
 
-  // return as a JSON
   return profiles;
 }
 
-function buildProfile(member: GuildMember | null, author: User) {
+function buildProfile(member: GuildMember | null, author: User): Profile {
   return {
     author: member?.nickname ?? author.displayName ?? author.username,
     avatar: member?.displayAvatarURL({ size: 64 }) ?? author.displayAvatarURL({ size: 64 }),
-    roleColor: member?.displayHexColor,
+    roleColor: member?.displayHexColor ?? undefined,
     roleIcon: member?.roles.icon?.iconURL() ?? undefined,
     roleName: member?.roles.hoist?.name ?? undefined,
-    bot: author.bot,
-    verified: author.flags?.has(UserFlags.VerifiedBot),
+    bot: author.bot || undefined,
+    verified: author.flags?.has(UserFlagsEnum.VerifiedBot) || undefined,
   };
 }

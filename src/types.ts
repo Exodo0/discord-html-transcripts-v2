@@ -1,7 +1,11 @@
 import type { AttachmentBuilder, Message } from 'discord.js';
-import type { RenderMessageContext } from './generator';
+import type { RenderMessageContext } from './renderer';
+
+// ── Attachment ─────────────────────────────────────────────────────────────
 
 export type AttachmentTypes = 'audio' | 'video' | 'image' | 'file';
+
+// ── Return type enum ───────────────────────────────────────────────────────
 
 export enum ExportReturnType {
   Buffer = 'buffer',
@@ -15,68 +19,98 @@ export type ObjectType<T extends ExportReturnType> = T extends ExportReturnType.
     ? string
     : AttachmentBuilder;
 
+// ── Options ────────────────────────────────────────────────────────────────
+
+/**
+ * Options shared between generateFromMessages and createTranscript.
+ */
 export type GenerateFromMessagesOptions<T extends ExportReturnType> = Partial<{
   /**
-   * The type of object to return
-   * @default ExportReturnType.ATTACHMENT
+   * The type of object to return.
+   * @default ExportReturnType.Attachment
    */
   returnType: T;
 
   /**
-   * Downloads images and encodes them as base64 data urls
+   * Downloads images and encodes them as base64 data URLs so the HTML is self-contained.
+   * Uses TranscriptImageDownloader internally unless you supply callbacks.resolveImageSrc.
    * @default false
    */
   saveImages: boolean;
 
   /**
-   * Callbacks for resolving channels, users, and roles
+   * Override individual resolution callbacks.
    */
   callbacks: Partial<RenderMessageContext['callbacks']>;
 
   /**
-   * The name of the file to return if returnType is ExportReturnType.ATTACHMENT
+   * File name used when returnType is Attachment.
    * @default 'transcript-{channel-id}.html'
    */
   filename: string;
 
   /**
-   * Whether to include the "Powered by discord-html-transcripts" footer
+   * Whether to render the "Powered by discord-html-transcripts" footer link.
    * @default true
    */
   poweredBy: boolean;
 
   /**
-   * The message right before "Powered by" text. Remember to put the {s}
+   * Text shown above the powered-by line.
+   * Supports tokens: {number}, {s}, and any key from `metadata`.
    * @default 'Exported {number} message{s}.'
    */
   footerText: string;
 
   /**
-   * Whether to show the guild icon or a custom icon as the favicon
-   * 'guild' - use the guild icon
-   * or pass in a url to use a custom icon
-   * @default "guild"
+   * Extra key-value pairs that are interpolated into footerText.
+   * Example: metadata: { closedBy: 'Admin' } → footerText: 'Closed by {closedBy}'
+   * @default {}
+   */
+  metadata: Record<string, string>;
+
+  /**
+   * Favicon shown in the browser tab.
+   * 'guild' uses the guild icon; any other string is used as a URL.
+   * @default 'guild'
    */
   favicon: 'guild' | string;
 
   /**
-   * Whether to hydrate the html server-side
-   * @default false - the returned html will be hydrated client-side
+   * When true the HTML is rendered server-side (SSR / hydrated).
+   * When false (default) the component library boots client-side via a CDN script tag.
+   * @default false
    */
   hydrate: boolean;
 }>;
 
-export type CreateTranscriptOptions<T extends ExportReturnType> = Partial<
-  GenerateFromMessagesOptions<T> & {
+/**
+ * Extended options for createTranscript (adds fetch controls on top of generate options).
+ */
+export type CreateTranscriptOptions<T extends ExportReturnType> = GenerateFromMessagesOptions<T> &
+  Partial<{
     /**
-     * The max amount of messages to fetch. Use `-1` to recursively fetch.
+     * Maximum number of messages to include.
+     * Use -1 (or omit) to fetch all available messages.
+     * @default -1 (all)
      */
     limit: number;
 
     /**
-     * Filter messages of the channel
-     * @default (() => true)
+     * Predicate to filter messages before inclusion.
+     * Only messages for which the predicate returns true are included.
      */
     filter: (message: Message<boolean>) => boolean;
-  }
->;
+
+    /**
+     * Order in which messages are rendered.
+     * @default 'ASC'
+     */
+    sortType: 'ASC' | 'DESC';
+
+    /**
+     * When true, pinned messages that were not fetched in the main loop are appended.
+     * @default false
+     */
+    includePinnedMessages: boolean;
+  }>;
