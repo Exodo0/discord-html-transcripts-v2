@@ -16,18 +16,30 @@ type RenderEmbedContext = RenderMessageContext & {
   message: Message;
 };
 
-/**
- * Renders a single Discord Embed with title, author, colour, image, thumbnail,
- * description, fields, and footer.
- */
-export async function DiscordEmbed({
-  embed,
-  context,
-}: {
-  embed: Embed;
-  context: RenderEmbedContext;
-}) {
+export async function DiscordEmbed({ embed, context }: { embed: Embed; context: RenderEmbedContext }) {
   const key = `${context.message.id}-e-${context.index}`;
+  const descriptionNode = embed.description
+    ? await MessageContent({ content: embed.description, context: { ...context, type: RenderType.EMBED } })
+    : null;
+  const fieldNodes = await Promise.all(
+    embed.fields.map(async (field, id) => {
+      const fieldContent = await MessageContent({
+        content: field.value,
+        context: { ...context, type: RenderType.EMBED },
+      });
+
+      return (
+        <DiscordEmbedField
+          key={`${key}-f-${id}`}
+          fieldTitle={field.name}
+          inline={field.inline}
+          inlineIndex={calculateInlineIndex(embed.fields, id)}
+        >
+          {fieldContent}
+        </DiscordEmbedField>
+      );
+    })
+  );
 
   return (
     <DiscordEmbedComponent
@@ -42,36 +54,10 @@ export async function DiscordEmbed({
       thumbnail={embed.thumbnail?.proxyURL ?? embed.thumbnail?.url}
       url={embed.url ?? undefined}
     >
-      {/* Description */}
-      {embed.description && (
-        <DiscordEmbedDescription slot="description">
-          <MessageContent
-            content={embed.description}
-            context={{ ...context, type: RenderType.EMBED }}
-          />
-        </DiscordEmbedDescription>
-      )}
+      {embed.description && <DiscordEmbedDescription slot="description">{descriptionNode}</DiscordEmbedDescription>}
 
-      {/* Fields */}
-      {embed.fields.length > 0 && (
-        <DiscordEmbedFields slot="fields">
-          {embed.fields.map((field, id) => (
-            <DiscordEmbedField
-              key={`${key}-f-${id}`}
-              fieldTitle={field.name}
-              inline={field.inline}
-              inlineIndex={calculateInlineIndex(embed.fields, id)}
-            >
-              <MessageContent
-                content={field.value}
-                context={{ ...context, type: RenderType.EMBED }}
-              />
-            </DiscordEmbedField>
-          ))}
-        </DiscordEmbedFields>
-      )}
+      {embed.fields.length > 0 && <DiscordEmbedFields slot="fields">{fieldNodes}</DiscordEmbedFields>}
 
-      {/* Footer */}
       {embed.footer && (
         <DiscordEmbedFooter
           slot="footer"

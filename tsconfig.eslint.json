@@ -5,5 +5,6 @@
     "skipLibCheck": true,
     "rootDir": "."
   },
-  "include": ["src", "tests", "BotExample", "tsup.config.ts", "vitest.config.ts"]
+  "include": ["src", "tests", "BotExample", "tsup.config.ts", "vitest.config.ts", "eslint.config.mjs"],
+  "exclude": ["node_modules", "dist"]
 }

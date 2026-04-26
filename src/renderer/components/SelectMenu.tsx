@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentType, type MessageActionRowComponent } from 'discord.js';
+import { ComponentType, type APIMessageComponentEmoji, type MessageActionRowComponent } from 'discord.js';
 import { parseDiscordEmoji } from '../../utils/utils';
 
 type SelectComponent = Exclude<MessageActionRowComponent, { type: ComponentType.Button }>;
@@ -28,19 +28,20 @@ interface DiscordSelectMenuProps {
 function DiscordSelectMenu({ component, disabled = false }: DiscordSelectMenuProps) {
   const isStringSelect = component.type === ComponentType.StringSelect;
   const placeholder = component.placeholder ?? getSelectLabel(component.type);
+  const options = isStringSelect
+    ? (component as { options?: Array<{ label: string; emoji?: APIMessageComponentEmoji }> }).options
+    : undefined;
 
   return (
     <div className={`discord-select-menu${disabled ? ' discord-select-menu-disabled' : ''}`}>
-      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-        {placeholder}
-      </div>
+      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{placeholder}</div>
       <div style={{ display: 'flex', alignItems: 'center', marginLeft: '8px', flexShrink: 0 }}>
         <svg width="24" height="24" viewBox="0 0 24 24">
           <path fill="currentColor" d="M7 10L12 15L17 10H7Z" />
         </svg>
       </div>
       {/* Show string-select options as collapsed tooltip-style */}
-      {isStringSelect && (component as { options?: Array<{ label: string; emoji?: import('discord.js').APIMessageComponentEmoji }> }).options?.length ? (
+      {isStringSelect && options?.length ? (
         <div
           style={{
             display: 'none', // static transcript — options are hidden (no JS interaction)
@@ -56,7 +57,7 @@ function DiscordSelectMenu({ component, disabled = false }: DiscordSelectMenuPro
             overflowY: 'auto',
           }}
         >
-          {(component as { options: Array<{ label: string; emoji?: import('discord.js').APIMessageComponentEmoji }> }).options.map((option, idx, arr) => (
+          {options.map((option, idx, arr) => (
             <div
               key={idx}
               style={{

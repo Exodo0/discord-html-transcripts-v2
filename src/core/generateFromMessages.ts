@@ -1,4 +1,4 @@
-import { AttachmentBuilder, type Collection, type Channel, type Message } from 'discord.js';
+import { AttachmentBuilder, type Collection, type Channel, type Message, type Role } from 'discord.js';
 import type { GenerateFromMessagesOptions, ObjectType } from '../types';
 import { ExportReturnType } from '../types';
 import { TranscriptImageDownloader, type ResolveImageCallback } from '../downloader/images';
@@ -23,12 +23,11 @@ export async function generateFromMessages<T extends ExportReturnType = ExportRe
 
   log(
     `Generating transcript for ${transformedMessages.length} messages in ` +
-      `${channel.isDMBased() ? 'DM' : (channel as { name?: string }).name ?? channel.id}`
+      `${channel.isDMBased() ? 'DM' : ((channel as { name?: string }).name ?? channel.id)}`
   );
 
   // ── Image resolver ─────────────────────────────────────────────────────────
-  let resolveImageSrc: ResolveImageCallback =
-    options.callbacks?.resolveImageSrc ?? ((attachment) => attachment.url);
+  let resolveImageSrc: ResolveImageCallback = options.callbacks?.resolveImageSrc ?? ((attachment) => attachment.url);
 
   if (options.saveImages) {
     if (options.callbacks?.resolveImageSrc) {
@@ -48,7 +47,9 @@ export async function generateFromMessages<T extends ExportReturnType = ExportRe
     : async (id: string) => {
         try {
           return await (
-            channel as unknown as { guild: { roles: { fetch: (id: string) => Promise<import('discord.js').Role | null> } } }
+            channel as unknown as {
+              guild: { roles: { fetch: (id: string) => Promise<Role | null> } };
+            }
           ).guild.roles.fetch(id);
         } catch {
           return null;

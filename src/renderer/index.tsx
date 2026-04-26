@@ -61,55 +61,51 @@ export default async function renderHtml({
         : (channel.guild.iconURL({ size: 16, extension: 'png' }) ?? undefined)
       : options.favicon;
 
-  const channelTitle = channel.isDMBased()
-    ? 'Direct Messages'
-    : (channel as { name?: string }).name ?? 'Transcript';
+  const channelTitle = channel.isDMBased() ? 'Direct Messages' : ((channel as { name?: string }).name ?? 'Transcript');
+  const transcriptRoot = await TranscriptRoot({
+    messages,
+    channel,
+    callbacks,
+    ...options,
+  });
 
-  const markup = '<!DOCTYPE html>' +
+  const markup =
+    '<!DOCTYPE html>' +
     renderToStaticMarkup(
-    <html>
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <html>
+        <head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        {faviconHref && <link rel="icon" type="image/png" href={faviconHref} />}
-        <title>{channelTitle}</title>
+          {faviconHref && <link rel="icon" type="image/png" href={faviconHref} />}
+          <title>{channelTitle}</title>
 
-        {/* Scroll-to-message handler (minified, no deps) */}
-        <script dangerouslySetInnerHTML={{ __html: scrollToMessage }} />
+          {/* Scroll-to-message handler (minified, no deps) */}
+          <script dangerouslySetInnerHTML={{ __html: scrollToMessage }} />
 
-        {!options.hydrate && (
-          <>
-            {/* User profile data for the component library */}
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `window.$discordMessage={profiles:${JSON.stringify(await profiles)}}`,
-              }}
-            />
-            {/* Discord component library (ESM, from CDN) */}
-            <script
-              type="module"
-              src={`https://cdn.jsdelivr.net/npm/@derockdev/discord-components-core@${DISCORD_COMPONENTS_VERSION}/dist/derockdev-discord-components-core/derockdev-discord-components-core.esm.js`}
-            />
-          </>
-        )}
-      </head>
+          {!options.hydrate && (
+            <>
+              {/* User profile data for the component library */}
+              <script
+                dangerouslySetInnerHTML={{
+                  __html: `window.$discordMessage={profiles:${JSON.stringify(await profiles)}}`,
+                }}
+              />
+              {/* Discord component library (ESM, from CDN) */}
+              <script
+                type="module"
+                src={`https://cdn.jsdelivr.net/npm/@derockdev/discord-components-core@${DISCORD_COMPONENTS_VERSION}/dist/derockdev-discord-components-core/derockdev-discord-components-core.esm.js`}
+              />
+            </>
+          )}
+        </head>
 
-      <body style={{ margin: 0, minHeight: '100vh' }}>
-        <TranscriptRoot
-          messages={messages}
-          channel={channel}
-          callbacks={callbacks}
-          {...options}
-        />
-      </body>
+        <body style={{ margin: 0, minHeight: '100vh' }}>{transcriptRoot}</body>
 
-      {/* Spoiler reveal script runs after DOM is ready (SSR mode only) */}
-      {options.hydrate && (
-        <script dangerouslySetInnerHTML={{ __html: revealSpoiler }} />
-      )}
-    </html>
-  );
+        {/* Spoiler reveal script runs after DOM is ready (SSR mode only) */}
+        {options.hydrate && <script dangerouslySetInnerHTML={{ __html: revealSpoiler }} />}
+      </html>
+    );
 
   if (options.hydrate) {
     log('Hydrating markup server-side');

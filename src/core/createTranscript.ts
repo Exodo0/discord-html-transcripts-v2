@@ -1,6 +1,5 @@
-import type { Message, TextBasedChannel } from 'discord.js';
-import type { CreateTranscriptOptions, ObjectType } from '../types';
-import { ExportReturnType } from '../types';
+import type { Collection, Message, TextBasedChannel } from 'discord.js';
+import type { CreateTranscriptOptions, ExportReturnType, ObjectType } from '../types';
 import { generateFromMessages } from './generateFromMessages';
 import debug from 'debug';
 
@@ -48,8 +47,8 @@ export async function createTranscript<T extends ExportReturnType = ExportReturn
   if (includePinnedMessages) {
     try {
       const messagesManager = channel.messages as unknown as {
-        fetchPins?: () => Promise<any>;
-        fetchPinned?: () => Promise<any>;
+        fetchPins?: () => Promise<Collection<string, Message>>;
+        fetchPinned?: () => Promise<Collection<string, Message>>;
       };
       const pinnedFetcher =
         typeof messagesManager.fetchPins === 'function'

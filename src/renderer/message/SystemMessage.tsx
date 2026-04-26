@@ -3,66 +3,66 @@ import { MessageType, type GuildMember, type Message, type User } from 'discord.
 import React from 'react';
 import { parseDiscordEmoji } from '../../utils/utils';
 
-export default async function SystemMessage({ message }: { message: Message }) {
-  switch (message.type) {
-    case MessageType.RecipientAdd:
-    case MessageType.UserJoin:
-      return (
-        <DiscordSystemMessage id={`m-${message.id}`} key={message.id} type="join">
-          <JoinMessage member={message.member} fallbackUser={message.author} />
-        </DiscordSystemMessage>
-      );
-
-    case MessageType.ChannelPinnedMessage:
-      return (
-        <DiscordSystemMessage id={`m-${message.id}`} key={message.id} type="pin">
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>{' '}
-          pinned{' '}
-          <i data-goto={message.reference?.messageId}>a message</i> to this channel.
-          {message.reactions.cache.size > 0 && (
-            <DiscordReactions slot="reactions">
-              {message.reactions.cache.map((reaction, id) => (
-                <DiscordReaction
-                  key={`${message.id}r${id}`}
-                  name={reaction.emoji.name!}
-                  emoji={parseDiscordEmoji(reaction.emoji)}
-                  count={reaction.count}
-                />
-              ))}
-            </DiscordReactions>
-          )}
-        </DiscordSystemMessage>
-      );
-
-    case MessageType.GuildBoost:
-    case MessageType.GuildBoostTier1:
-    case MessageType.GuildBoostTier2:
-    case MessageType.GuildBoostTier3:
-      return (
-        <DiscordSystemMessage id={`m-${message.id}`} key={message.id} type="boost">
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>{' '}
-          boosted the server!
-        </DiscordSystemMessage>
-      );
-
-    case MessageType.ThreadStarterMessage:
-      return (
-        <DiscordSystemMessage id={`ms-${message.id}`} key={message.id} type="thread">
-          <Highlight color={message.member?.roles.color?.hexColor}>
-            {message.author.displayName ?? message.author.username}
-          </Highlight>{' '}
-          started a thread:{' '}
-          <i data-goto={message.reference?.messageId}>{message.content}</i>
-        </DiscordSystemMessage>
-      );
-
-    default:
-      return undefined;
+export default function SystemMessage({ message }: { message: Message }) {
+  if (message.type === MessageType.RecipientAdd || message.type === MessageType.UserJoin) {
+    return (
+      <DiscordSystemMessage id={`m-${message.id}`} key={message.id} type="join">
+        <JoinMessage member={message.member} fallbackUser={message.author} />
+      </DiscordSystemMessage>
+    );
   }
+
+  if (message.type === MessageType.ChannelPinnedMessage) {
+    return (
+      <DiscordSystemMessage id={`m-${message.id}`} key={message.id} type="pin">
+        <Highlight color={message.member?.roles.color?.hexColor}>
+          {message.author.displayName ?? message.author.username}
+        </Highlight>{' '}
+        pinned <i data-goto={message.reference?.messageId}>a message</i> to this channel.
+        {message.reactions.cache.size > 0 && (
+          <DiscordReactions slot="reactions">
+            {message.reactions.cache.map((reaction, id) => (
+              <DiscordReaction
+                key={`${message.id}r${id}`}
+                name={reaction.emoji.name!}
+                emoji={parseDiscordEmoji(reaction.emoji)}
+                count={reaction.count}
+              />
+            ))}
+          </DiscordReactions>
+        )}
+      </DiscordSystemMessage>
+    );
+  }
+
+  if (
+    message.type === MessageType.GuildBoost ||
+    message.type === MessageType.GuildBoostTier1 ||
+    message.type === MessageType.GuildBoostTier2 ||
+    message.type === MessageType.GuildBoostTier3
+  ) {
+    return (
+      <DiscordSystemMessage id={`m-${message.id}`} key={message.id} type="boost">
+        <Highlight color={message.member?.roles.color?.hexColor}>
+          {message.author.displayName ?? message.author.username}
+        </Highlight>{' '}
+        boosted the server!
+      </DiscordSystemMessage>
+    );
+  }
+
+  if (message.type === MessageType.ThreadStarterMessage) {
+    return (
+      <DiscordSystemMessage id={`ms-${message.id}`} key={message.id} type="thread">
+        <Highlight color={message.member?.roles.color?.hexColor}>
+          {message.author.displayName ?? message.author.username}
+        </Highlight>{' '}
+        started a thread: <i data-goto={message.reference?.messageId}>{message.content}</i>
+      </DiscordSystemMessage>
+    );
+  }
+
+  return undefined;
 }
 
 export function Highlight({ children, color }: { children: React.ReactNode; color?: string }) {
@@ -108,16 +108,9 @@ const JOIN_MESSAGES = [
   "Hello. Is it {user} you're looking for?",
 ];
 
-export function JoinMessage({
-  member,
-  fallbackUser,
-}: {
-  member: GuildMember | null;
-  fallbackUser: User;
-}) {
+export function JoinMessage({ member, fallbackUser }: { member: GuildMember | null; fallbackUser: User }) {
   const template = JOIN_MESSAGES[Math.floor(Math.random() * JOIN_MESSAGES.length)];
-  const displayName =
-    member?.nickname ?? fallbackUser.displayName ?? fallbackUser.username;
+  const displayName = member?.nickname ?? fallbackUser.displayName ?? fallbackUser.username;
   const color = member?.roles.color?.hexColor;
 
   return template

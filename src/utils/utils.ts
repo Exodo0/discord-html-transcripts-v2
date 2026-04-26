@@ -43,4 +43,3 @@ export function isDefined<T>(value: T | undefined | null): value is T {
 export function numberToHexColor(color: number): string {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
-

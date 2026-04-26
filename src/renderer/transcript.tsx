@@ -12,12 +12,7 @@ import MessageContent, { RenderType } from './content/MessageContent';
  *
  * Requires `window.$discordMessage.profiles` to be set client-side (or via hydration).
  */
-export default async function TranscriptRoot({
-  messages,
-  channel,
-  callbacks,
-  ...options
-}: RenderMessageContext) {
+export default async function TranscriptRoot({ messages, channel, callbacks, ...options }: RenderMessageContext) {
   const guildName = channel.isDMBased() ? 'Direct Messages' : channel.guild.name;
   const channelName = channel.isDMBased()
     ? channel.type === ChannelType.DM
@@ -25,11 +20,21 @@ export default async function TranscriptRoot({
       : 'Unknown Recipient'
     : channel.name;
 
-  const guildIcon = channel.isDMBased()
-    ? undefined
-    : (channel.guild.iconURL({ size: 128 }) ?? undefined);
+  const guildIcon = channel.isDMBased() ? undefined : (channel.guild.iconURL({ size: 128 }) ?? undefined);
 
   const context: RenderMessageContext = { messages, channel, callbacks, ...options };
+  const headerDescription = channel.isThread()
+    ? `Thread channel in ${channel.parent?.name ?? 'Unknown Channel'}`
+    : channel.isDMBased()
+      ? 'Direct Messages'
+      : channel.isVoiceBased()
+        ? `Voice Text Channel for ${channel.name}`
+        : channel.type === ChannelType.GuildCategory
+          ? 'Category Channel'
+          : 'topic' in channel && channel.topic
+            ? await MessageContent({ content: channel.topic, context: { ...context, type: RenderType.REPLY } })
+            : `This is the start of #${channel.name} channel.`;
+  const renderedMessages = await Promise.all(messages.map((message) => DiscordMessage({ message, context })));
 
   return (
     <DiscordMessagesComponent style={{ minHeight: '100vh' }}>
@@ -38,32 +43,11 @@ export default async function TranscriptRoot({
 
       {/* Channel header */}
       <DiscordHeader guild={guildName} channel={channelName} icon={guildIcon}>
-        {channel.isThread() ? (
-          `Thread channel in ${channel.parent?.name ?? 'Unknown Channel'}`
-        ) : channel.isDMBased() ? (
-          'Direct Messages'
-        ) : channel.isVoiceBased() ? (
-          `Voice Text Channel for ${channel.name}`
-        ) : channel.type === ChannelType.GuildCategory ? (
-          'Category Channel'
-        ) : 'topic' in channel && channel.topic ? (
-          <MessageContent
-            content={channel.topic}
-            context={{ ...context, type: RenderType.REPLY }}
-          />
-        ) : (
-          `This is the start of #${channel.name} channel.`
-        )}
+        {headerDescription}
       </DiscordHeader>
 
       {/* Messages */}
-      {messages.map((message) => (
-        <DiscordMessage
-          key={message.id}
-          message={message}
-          context={context}
-        />
-      ))}
+      {renderedMessages}
 
       {/* Footer */}
       <Footer messages={messages} options={options} />
@@ -92,11 +76,9 @@ function Footer({
       {interpolated}
       {poweredBy && (
         <span style={{ textAlign: 'center' }}>
-          {' '}Powered by:{' '}
-          <a
-            href="https://github.com/Exodo0/discord-html-transcripts-v2"
-            style={{ color: 'lightblue' }}
-          >
+          {' '}
+          Powered by:{' '}
+          <a href="https://github.com/Exodo0/discord-html-transcripts-v2" style={{ color: 'lightblue' }}>
             discord-html-transcripts-v2
           </a>
           .

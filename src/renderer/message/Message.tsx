@@ -18,15 +18,9 @@ import { DiscordEmbed } from '../embed/Embed';
 import MessageReply from './Reply';
 import SystemMessage from './SystemMessage';
 
-/**
- * Returns true when a message was sent with the IsComponentsV2 flag,
- * meaning the body is entirely composed of top-level V2 components
- * (Container, Section, MediaGallery, etc.) with no classic content/embeds.
- */
 function isComponentsV2Message(message: MessageType): boolean {
   if (!message.components.length) return false;
-  // V2 messages: content is empty AND embeds are empty AND at least one
-  // top-level component is a V2 type (Container, Section, MediaGallery, Separator, TextDisplay, File)
+
   const v2Types = new Set([
     ComponentType.Container,
     ComponentType.Section,
@@ -35,20 +29,10 @@ function isComponentsV2Message(message: MessageType): boolean {
     ComponentType.TextDisplay,
     ComponentType.File,
   ]);
-  return (
-    !message.content &&
-    message.embeds.length === 0 &&
-    message.components.some((c) => v2Types.has(c.type))
-  );
+
+  return !message.content && message.embeds.length === 0 && message.components.some((c) => v2Types.has(c.type));
 }
 
-/**
- * Renders a single Discord message with all its sub-elements:
- * reply, slash-command indicator, content, attachments, embeds, components, reactions, threads.
- *
- * Automatically detects V2 Component messages (ContainerBuilder / IsComponentsV2)
- * and renders them via the ComponentsSlot — no extra config needed.
- */
 export default async function DiscordMessage({
   message,
   context,
@@ -56,11 +40,38 @@ export default async function DiscordMessage({
   message: MessageType;
   context: RenderMessageContext;
 }) {
-  // System messages have their own renderer
-  if (message.system) return <SystemMessage message={message} />;
+  if (message.system) return SystemMessage({ message });
 
   const isCrosspost = message.reference?.guildId !== message.guild?.id;
   const isV2 = isComponentsV2Message(message);
+  const replyNode = await MessageReply({ message, context });
+  const contentNode = message.content
+    ? await MessageContent({
+        content: message.content,
+        context: {
+          ...context,
+          type: message.webhookId ? RenderType.WEBHOOK : RenderType.NORMAL,
+        },
+      })
+    : null;
+  const attachmentsNode = await Attachments({ message, context });
+  const embedNodes = await Promise.all(
+    message.embeds.map((embed, id) => DiscordEmbed({ embed, context: { ...context, index: id, message } }))
+  );
+  const v2ComponentNodes = await Promise.all(
+    message.components.map((component, id) => ComponentRow({ id, component, context }))
+  );
+  const classicComponentsNode = await ComponentsSlot({ components: message.components, context });
+  const threadPreviewNode =
+    message.hasThread && message.thread?.lastMessage
+      ? await MessageContent({
+          content:
+            message.thread.lastMessage.content.length > 128
+              ? message.thread.lastMessage.content.slice(0, 125) + '…'
+              : message.thread.lastMessage.content,
+          context: { ...context, type: RenderType.REPLY },
+        })
+      : null;
 
   return (
     <DiscordMessageComponent
@@ -72,10 +83,8 @@ export default async function DiscordMessage({
       highlight={message.mentions.everyone}
       profile={message.author.id}
     >
-      {/* Reply reference */}
-      <MessageReply message={message} context={context} />
+      {replyNode}
 
-      {/* Slash command indicator */}
       {message.interaction && (
         <DiscordCommand
           slot="reply"
@@ -84,49 +93,17 @@ export default async function DiscordMessage({
         />
       )}
 
-      {/* ── Classic message body ───────────────────────────────────────── */}
       {!isV2 && (
         <>
-          {message.content && (
-            <MessageContent
-              content={message.content}
-              context={{
-                ...context,
-                type: message.webhookId ? RenderType.WEBHOOK : RenderType.NORMAL,
-              }}
-            />
-          )}
-
-          {/* Attachments */}
-          <Attachments message={message} context={context} />
-
-          {/* Embeds */}
-          {message.embeds.map((embed, id) => (
-            <DiscordEmbed
-              key={id}
-              embed={embed}
-              context={{ ...context, index: id, message }}
-            />
-          ))}
+          {contentNode}
+          {attachmentsNode}
+          {embedNodes}
         </>
       )}
 
-      {/* ── Components (V2 full-body or classic ActionRows) ───────────── */}
-      {message.components.length > 0 && (
-        isV2 ? (
-          /* V2: components ARE the message body */
-          <DiscordAttachments slot="components">
-            {message.components.map((component, id) => (
-              <ComponentRow key={id} id={id} component={component} context={context} />
-            ))}
-          </DiscordAttachments>
-        ) : (
-          /* Classic: ActionRows below the message content */
-          <ComponentsSlot components={message.components} context={context} />
-        )
-      )}
+      {message.components.length > 0 &&
+        (isV2 ? <DiscordAttachments slot="components">{v2ComponentNodes}</DiscordAttachments> : classicComponentsNode)}
 
-      {/* Reactions */}
       {message.reactions.cache.size > 0 && (
         <DiscordReactions slot="reactions">
           {message.reactions.cache.map((reaction, id) => (
@@ -140,7 +117,6 @@ export default async function DiscordMessage({
         </DiscordReactions>
       )}
 
-      {/* Thread preview */}
       {message.hasThread && message.thread && (
         <DiscordThread
           slot="thread"
@@ -153,14 +129,7 @@ export default async function DiscordMessage({
         >
           {message.thread.lastMessage ? (
             <DiscordThreadMessage profile={message.thread.lastMessage.author.id}>
-              <MessageContent
-                content={
-                  message.thread.lastMessage.content.length > 128
-                    ? message.thread.lastMessage.content.slice(0, 125) + '…'
-                    : message.thread.lastMessage.content
-                }
-                context={{ ...context, type: RenderType.REPLY }}
-              />
+              {threadPreviewNode}
             </DiscordThreadMessage>
           ) : (
             'Thread messages not saved.'

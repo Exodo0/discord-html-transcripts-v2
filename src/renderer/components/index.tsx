@@ -2,8 +2,8 @@ import { DiscordActionRow, DiscordAttachments } from '@derockdev/discord-compone
 import {
   ComponentType,
   type MessageActionRowComponent,
-  type TopLevelComponent,
   type ThumbnailComponent,
+  type TopLevelComponent,
 } from 'discord.js';
 import React from 'react';
 import type { RenderMessageContext } from '../index';
@@ -20,11 +20,6 @@ import TextDisplay from './TextDisplay';
 import DiscordSection from './section/Section';
 import MessageContent, { RenderType } from '../content/MessageContent';
 
-// ── Public component renderer (used in ActionRows) ────────────────────────
-
-/**
- * Renders an individual action-row component (Button, SelectMenu, Thumbnail).
- */
 export function Component({
   component,
   id,
@@ -54,20 +49,12 @@ export function Component({
       return <DiscordSelectMenu key={id} component={component} disabled={component.disabled} />;
 
     case ComponentType.Thumbnail:
-      return (
-        <DiscordThumbnail
-          key={id}
-          url={component.media.url}
-          description={component.description ?? undefined}
-        />
-      );
+      return <DiscordThumbnail key={id} url={component.media.url} description={component.description ?? undefined} />;
 
     default:
       return null;
   }
 }
-
-// ── Top-level component dispatcher ────────────────────────────────────────
 
 interface ComponentRowProps {
   component: TopLevelComponent;
@@ -75,13 +62,8 @@ interface ComponentRowProps {
   context: RenderMessageContext;
 }
 
-/**
- * Dispatches each top-level component to its dedicated renderer.
- * Handles: ActionRow, Container, File, MediaGallery, Section, Separator, TextDisplay.
- */
-export default function ComponentRow({ component, id, context }: ComponentRowProps) {
+export default async function ComponentRow({ component, id, context }: ComponentRowProps) {
   switch (component.type) {
-    // ── Classic ActionRow (buttons / selects) ────────────────────────────
     case ComponentType.ActionRow:
       return (
         <DiscordActionRow key={id}>
@@ -93,57 +75,45 @@ export default function ComponentRow({ component, id, context }: ComponentRowPro
         </DiscordActionRow>
       );
 
-    // ── V2 Container ─────────────────────────────────────────────────────
     case ComponentType.Container: {
-      const accentColor =
-        'accentColor' in component ? (component.accentColor as number | undefined) : undefined;
+      const accentColor = 'accentColor' in component ? (component.accentColor as number | undefined) : undefined;
+      const children = await Promise.all(
+        component.components.map((child, i) => ContainerChild({ component: child, id: i, context }))
+      );
+
       return (
         <DiscordContainer key={id} accentColor={accentColor}>
-          <>
-            {component.components.map((child, i) => (
-              <ContainerChild key={i} component={child} id={i} context={context} />
-            ))}
-          </>
+          <>{children}</>
         </DiscordContainer>
       );
     }
 
-    // ── V2 File ──────────────────────────────────────────────────────────
     case ComponentType.File:
       return <DiscordFileComponent key={id} component={component} />;
 
-    // ── V2 MediaGallery ──────────────────────────────────────────────────
     case ComponentType.MediaGallery:
       return <DiscordMediaGallery key={id} component={component} />;
 
-    // ── V2 Section ───────────────────────────────────────────────────────
     case ComponentType.Section: {
-      const accessoryNode = component.accessory ? (
-        <Component component={component.accessory} id={id} />
-      ) : undefined;
+      const accessoryNode = component.accessory ? <Component component={component.accessory} id={id} /> : undefined;
+      const children = await Promise.all(
+        component.components.map((child, i) => ContainerChild({ component: child, id: i, context }))
+      );
+
       return (
         <DiscordSection key={id} accessoryNode={accessoryNode}>
-          {component.components.map((child, i) => (
-            <ContainerChild key={i} component={child} id={i} context={context} />
-          ))}
+          {children}
         </DiscordSection>
       );
     }
 
-    // ── V2 Separator ─────────────────────────────────────────────────────
     case ComponentType.Separator:
-      return (
-        <DiscordSeparator key={id} divider={component.divider ?? false} spacing={component.spacing} />
-      );
+      return <DiscordSeparator key={id} divider={component.divider ?? false} spacing={component.spacing} />;
 
-    // ── V2 TextDisplay ───────────────────────────────────────────────────
     case ComponentType.TextDisplay:
       return (
         <TextDisplay key={id}>
-          <MessageContent
-            content={component.content}
-            context={{ ...context, type: RenderType.NORMAL }}
-          />
+          {await MessageContent({ content: component.content, context: { ...context, type: RenderType.NORMAL } })}
         </TextDisplay>
       );
 
@@ -152,13 +122,7 @@ export default function ComponentRow({ component, id, context }: ComponentRowPro
   }
 }
 
-// ── Container child renderer ──────────────────────────────────────────────
-
-/**
- * Renders a component that lives directly inside a Container.
- * ActionRows get horizontal padding so buttons line up with Section text.
- */
-function ContainerChild({
+async function ContainerChild({
   component,
   id,
   context,
@@ -186,25 +150,18 @@ function ContainerChild({
     );
   }
 
-  return <ComponentRow component={component} id={id} context={context} />;
+  return await ComponentRow({ component, id, context });
 }
-
-// ── Slot wrapper (used in message renderer for top-level component lists) ─
 
 interface ComponentsSlotProps {
   components: readonly TopLevelComponent[];
   context: RenderMessageContext;
 }
 
-/**
- * Wraps all message-level top-level components in a DiscordAttachments slot.
- */
-export function ComponentsSlot({ components, context }: ComponentsSlotProps) {
-  return (
-    <DiscordAttachments slot="components">
-      {components.map((c, i) => (
-        <ComponentRow key={i} id={i} component={c} context={context} />
-      ))}
-    </DiscordAttachments>
+export async function ComponentsSlot({ components, context }: ComponentsSlotProps) {
+  const renderedComponents = await Promise.all(
+    components.map((component, i) => ComponentRow({ component, id: i, context }))
   );
+
+  return <DiscordAttachments slot="components">{renderedComponents}</DiscordAttachments>;
 }

@@ -49,17 +49,14 @@ async function resolveGuild(client: Client): Promise<Guild> {
   if (guildId) return client.guilds.fetch(guildId);
 
   const guilds = await client.guilds.fetch();
-  if (guilds.size !== 1)
-    throw new Error('Set GUILD_ID when the bot belongs to more than one server.');
+  if (guilds.size !== 1) throw new Error('Set GUILD_ID when the bot belongs to more than one server.');
 
   const first = guilds.first();
   if (!first) throw new Error('The bot is not in any server.');
   return client.guilds.fetch(first.id);
 }
 
-function isTranscriptCandidate(
-  channel: GuildBasedChannel
-): channel is TextBasedChannel & GuildBasedChannel {
+function isTranscriptCandidate(channel: GuildBasedChannel): channel is TextBasedChannel & GuildBasedChannel {
   return (
     channel.parentId !== null &&
     channel.isTextBased() &&
@@ -77,15 +74,13 @@ async function pickChannel(guild: Guild): Promise<TextBasedChannel & GuildBasedC
   const channelId = process.env.CHANNEL_ID?.trim();
   if (channelId) {
     const ch = guild.channels.cache.get(channelId);
-    if (!ch || !isTranscriptCandidate(ch))
-      throw new Error(`Channel ${channelId} not found or not a text channel.`);
+    if (!ch || !isTranscriptCandidate(ch)) throw new Error(`Channel ${channelId} not found or not a text channel.`);
     return ch;
   }
 
   const categoryId = process.env.CATEGORY_ID?.trim();
   const categoryName = process.env.CATEGORY_NAME?.trim();
-  if (!categoryId && !categoryName)
-    throw new Error('Set CHANNEL_ID, CATEGORY_ID, or CATEGORY_NAME in .env');
+  if (!categoryId && !categoryName) throw new Error('Set CHANNEL_ID, CATEGORY_ID, or CATEGORY_NAME in .env');
 
   const category = guild.channels.cache.find((ch) => {
     if (ch?.type !== ChannelType.GuildCategory) return false;
@@ -96,12 +91,10 @@ async function pickChannel(guild: Guild): Promise<TextBasedChannel & GuildBasedC
   if (!category) throw new Error('The configured category was not found.');
 
   const eligible = guild.channels.cache.filter(
-    (ch): ch is TextBasedChannel & GuildBasedChannel =>
-      !!ch && ch.parentId === category.id && isTranscriptCandidate(ch)
+    (ch): ch is TextBasedChannel & GuildBasedChannel => !!ch && ch.parentId === category.id && isTranscriptCandidate(ch)
   );
 
-  if (eligible.size === 0)
-    throw new Error(`Category "${category.name}" has no eligible text channels.`);
+  if (eligible.size === 0) throw new Error(`Category "${category.name}" has no eligible text channels.`);
 
   const arr = [...eligible.values()];
   return arr[Math.floor(Math.random() * arr.length)]!;
@@ -117,11 +110,7 @@ async function main(): Promise<void> {
   const outputDir = path.resolve(__dirname, process.env.OUTPUT_DIR?.trim() || './output');
 
   const client = new Client({
-    intents: [
-      GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.MessageContent,
-    ],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
   });
 
   client.once('ready', async () => {
@@ -143,8 +132,7 @@ async function main(): Promise<void> {
 
       await mkdir(outputDir, { recursive: true });
 
-      const safeName =
-        channel.name.replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || channel.id;
+      const safeName = channel.name.replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || channel.id;
       const filePath = path.join(outputDir, `${safeName}-${channel.id}.html`);
 
       await writeFile(filePath, transcript, 'utf8');

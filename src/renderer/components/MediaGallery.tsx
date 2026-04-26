@@ -45,10 +45,7 @@ function DiscordMediaGallery({ component }: DiscordMediaGalleryProps) {
     <div style={{ padding: '0 16px 12px', boxSizing: 'border-box' }}>
       <div style={getGalleryLayout(items.length)}>
         {items.map((media, idx) => (
-          <div
-            key={idx}
-            style={{ ...getItemStyle(idx, items.length), borderRadius: '4px', overflow: 'hidden' }}
-          >
+          <div key={idx} style={{ ...getItemStyle(idx, items.length), borderRadius: '4px', overflow: 'hidden' }}>
             <img
               src={media.media.url}
               alt={media.description ?? 'Media'}

@@ -4,19 +4,8 @@ import React from 'react';
 import type { RenderMessageContext } from '../index';
 import MessageContent, { RenderType } from '../content/MessageContent';
 
-/**
- * Renders a Discord reply indicator above a message.
- * Shows the referenced message content (truncated) or a fallback placeholder.
- */
-export default async function MessageReply({
-  message,
-  context,
-}: {
-  message: Message;
-  context: RenderMessageContext;
-}) {
+export default async function MessageReply({ message, context }: { message: Message; context: RenderMessageContext }) {
   if (!message.reference) return null;
-  // Cross-server reposts are not reply-rendered
   if (message.reference.guildId !== message.guild?.id) return null;
 
   const referenced = context.messages.find((m) => m.id === message.reference!.messageId);
@@ -27,17 +16,16 @@ export default async function MessageReply({
 
   const isCrossPost = referenced.reference?.guildId !== message.guild?.id;
   const isCommand = referenced.interaction !== null;
+  const replyContent = referenced.content
+    ? await MessageContent({ content: referenced.content, context: { ...context, type: RenderType.REPLY } })
+    : null;
 
   return (
     <DiscordReply
       slot="reply"
       edited={!isCommand && referenced.editedAt !== null}
       attachment={referenced.attachments.size > 0}
-      author={
-        referenced.member?.nickname ??
-        referenced.author.displayName ??
-        referenced.author.username
-      }
+      author={referenced.member?.nickname ?? referenced.author.displayName ?? referenced.author.username}
       avatar={referenced.author.avatarURL({ size: 32 }) ?? undefined}
       roleColor={referenced.member?.displayHexColor ?? undefined}
       bot={!isCrossPost && referenced.author.bot}
@@ -47,12 +35,7 @@ export default async function MessageReply({
       command={isCommand}
     >
       {referenced.content ? (
-        <span data-goto={referenced.id}>
-          <MessageContent
-            content={referenced.content}
-            context={{ ...context, type: RenderType.REPLY }}
-          />
-        </span>
+        <span data-goto={referenced.id}>{replyContent}</span>
       ) : isCommand ? (
         <em data-goto={referenced.id}>Click to see command.</em>
       ) : (

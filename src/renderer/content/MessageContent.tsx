@@ -40,8 +40,6 @@ const parseMarkdown: DiscordMarkdownParse = (() => {
   throw new TypeError('[discord-html-transcripts] Could not resolve discord-markdown-parser.');
 })();
 
-// ── Render mode ────────────────────────────────────────────────────────────
-
 export enum RenderType {
   EMBED,
   REPLY,
@@ -54,47 +52,22 @@ type RenderContentContext = RenderMessageContext & {
   _internal?: { largeEmojis?: boolean };
 };
 
-// ── Root content renderer ─────────────────────────────────────────────────
-
-/**
- * Parses a Discord markdown string and renders it to React nodes.
- */
-export default async function MessageContent({
-  content,
-  context,
-}: {
-  content: string;
-  context: RenderContentContext;
-}) {
-  const trimmed =
-    context.type === RenderType.REPLY && content.length > 180
-      ? content.slice(0, 180) + '…'
-      : content;
+export default async function MessageContent({ content, context }: { content: string; context: RenderContentContext }) {
+  const trimmed = context.type === RenderType.REPLY && content.length > 180 ? content.slice(0, 180) + '…' : content;
 
   const parsed = parseMarkdown(
     trimmed,
     context.type === RenderType.EMBED || context.type === RenderType.WEBHOOK ? 'extended' : 'normal'
   );
 
-  // Large emoji detection: only emojis (and whitespace) in the message + ≤ 25 of them
-  const emojiNodes = parsed.filter(
-    (n: SingleASTNode) => n.type === 'emoji' || n.type === 'twemoji'
-  );
+  const emojiNodes = parsed.filter((n: SingleASTNode) => n.type === 'emoji' || n.type === 'twemoji');
   const onlyEmojis = parsed.every(
-    (n: SingleASTNode) =>
-      n.type === 'emoji' || n.type === 'twemoji' || (n.type === 'text' && !String(n.content).trim())
+    (n: SingleASTNode) => n.type === 'emoji' || n.type === 'twemoji' || (n.type === 'text' && !String(n.content).trim())
   );
   const largeEmojis = onlyEmojis && emojiNodes.length > 0 && emojiNodes.length <= 25;
 
-  return (
-    <MessageASTNodeList
-      nodes={parsed}
-      context={{ ...context, _internal: { largeEmojis } }}
-    />
-  );
+  return await MessageASTNodeList({ nodes: parsed, context: { ...context, _internal: { largeEmojis } } });
 }
-
-// ── Node list ─────────────────────────────────────────────────────────────
 
 async function MessageASTNodeList({
   nodes,
@@ -104,26 +77,20 @@ async function MessageASTNodeList({
   context: RenderContentContext;
 }): Promise<React.JSX.Element> {
   if (Array.isArray(nodes)) {
+    const renderedNodes = await Promise.all(nodes.map((node) => MessageSingleASTNode({ node, context })));
     return (
       <>
-        {nodes.map((node, i) => (
-          <MessageSingleASTNode node={node} context={context} key={i} />
+        {renderedNodes.map((node, i) => (
+          <React.Fragment key={i}>{node}</React.Fragment>
         ))}
       </>
     );
   }
-  return <MessageSingleASTNode node={nodes} context={context} />;
+
+  return <>{await MessageSingleASTNode({ node: nodes, context })}</>;
 }
 
-// ── Single node renderer ──────────────────────────────────────────────────
-
-export async function MessageSingleASTNode({
-  node,
-  context,
-}: {
-  node: SingleASTNode;
-  context: RenderContentContext;
-}) {
+export async function MessageSingleASTNode({ node, context }: { node: SingleASTNode; context: RenderContentContext }) {
   if (!node) return null;
 
   const type = node.type as RuleTypesExtended;
@@ -134,28 +101,23 @@ export async function MessageSingleASTNode({
 
     case 'link':
       return (
-        <a href={node.target as string}>
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
-        </a>
+        <a href={node.target as string}>{await MessageASTNodeList({ nodes: node.content as ASTNode, context })}</a>
       );
 
     case 'url':
     case 'autolink':
       return (
         <a href={node.target as string} target="_blank" rel="noreferrer">
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
+          {await MessageASTNodeList({ nodes: node.content as ASTNode, context })}
         </a>
       );
 
     case 'blockQuote':
       if (context.type === RenderType.REPLY) {
-        return <MessageASTNodeList nodes={node.content as ASTNode} context={context} />;
+        return await MessageASTNodeList({ nodes: node.content as ASTNode, context });
       }
-      return (
-        <DiscordQuote>
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
-        </DiscordQuote>
-      );
+
+      return <DiscordQuote>{await MessageASTNodeList({ nodes: node.content as ASTNode, context })}</DiscordQuote>;
 
     case 'br':
     case 'newline':
@@ -165,9 +127,7 @@ export async function MessageSingleASTNode({
       const id = node.id as string;
       const channel = await context.callbacks.resolveChannel(id);
       return (
-        <DiscordMention
-          type={channel ? (channel.isDMBased() ? 'channel' : getChannelType(channel.type)) : 'channel'}
-        >
+        <DiscordMention type={channel ? (channel.isDMBased() ? 'channel' : getChannelType(channel.type)) : 'channel'}>
           {channel ? (channel.isDMBased() ? 'DM Channel' : (channel as { name?: string }).name) : `<#${id}>`}
         </DiscordMention>
       );
@@ -186,11 +146,7 @@ export async function MessageSingleASTNode({
     case 'user': {
       const id = node.id as string;
       const user = await context.callbacks.resolveUser(id);
-      return (
-        <DiscordMention type="user">
-          {user ? (user.displayName ?? user.username) : `<@${id}>`}
-        </DiscordMention>
-      );
+      return <DiscordMention type="user">{user ? (user.displayName ?? user.username) : `<@${id}>`}</DiscordMention>;
     }
 
     case 'here':
@@ -205,34 +161,25 @@ export async function MessageSingleASTNode({
       if (context.type === RenderType.REPLY) {
         return <DiscordInlineCode>{node.content as string}</DiscordInlineCode>;
       }
+
       return <DiscordCodeBlock language={node.lang as string} code={node.content as string} />;
 
     case 'inlineCode':
       return <DiscordInlineCode>{node.content as string}</DiscordInlineCode>;
 
     case 'em':
-      return (
-        <DiscordItalic>
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
-        </DiscordItalic>
-      );
+      return <DiscordItalic>{await MessageASTNodeList({ nodes: node.content as ASTNode, context })}</DiscordItalic>;
 
     case 'strong':
-      return (
-        <DiscordBold>
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
-        </DiscordBold>
-      );
+      return <DiscordBold>{await MessageASTNodeList({ nodes: node.content as ASTNode, context })}</DiscordBold>;
 
     case 'underline':
       return (
-        <DiscordUnderlined>
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
-        </DiscordUnderlined>
+        <DiscordUnderlined>{await MessageASTNodeList({ nodes: node.content as ASTNode, context })}</DiscordUnderlined>
       );
 
     case 'heading': {
-      const rendered = <MessageASTNodeList nodes={node.content as ASTNode} context={context} />;
+      const rendered = await MessageASTNodeList({ nodes: node.content as ASTNode, context });
       if (context.type === RenderType.REPLY) return rendered;
       if ((node.level as number) <= 2) {
         return (
@@ -242,6 +189,7 @@ export async function MessageSingleASTNode({
           </>
         );
       }
+
       return (
         <>
           {rendered}
@@ -251,21 +199,13 @@ export async function MessageSingleASTNode({
     }
 
     case 'strikethrough':
-      return (
-        <s>
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
-        </s>
-      );
+      return <s>{await MessageASTNodeList({ nodes: node.content as ASTNode, context })}</s>;
 
     case 'emoticon':
-      return renderUnknown(node.content, context);
+      return await renderUnknown(node.content, context);
 
     case 'spoiler':
-      return (
-        <DiscordSpoiler>
-          <MessageASTNodeList nodes={node.content as ASTNode} context={context} />
-        </DiscordSpoiler>
-      );
+      return <DiscordSpoiler>{await MessageASTNodeList({ nodes: node.content as ASTNode, context })}</DiscordSpoiler>;
 
     case 'emoji':
     case 'twemoji':
@@ -288,24 +228,17 @@ export async function MessageSingleASTNode({
 
     default:
       log(`Unknown node type: ${type}`, node);
-      return renderUnknown(node.content, context);
+      return await renderUnknown(node.content, context);
   }
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-function renderUnknown(content: unknown, context: RenderContentContext): React.ReactNode {
+async function renderUnknown(content: unknown, context: RenderContentContext): Promise<React.ReactNode> {
   if (typeof content === 'string') return content;
-  if (Array.isArray(content))
-    return <MessageASTNodeList nodes={content as ASTNode} context={context} />;
+  if (Array.isArray(content)) return await MessageASTNodeList({ nodes: content as ASTNode, context });
   if (React.isValidElement(content)) return content;
 
-  // Handle legacy React-element-like objects from the parser
   if (isLegacyElementLike(content)) {
-    const props =
-      content.props && typeof content.props === 'object'
-        ? (content.props as Record<string, unknown>)
-        : {};
+    const props = content.props && typeof content.props === 'object' ? (content.props as Record<string, unknown>) : {};
     return React.createElement(content.type, { ...props, key: content.key ?? undefined });
   }
 
@@ -316,29 +249,20 @@ function renderUnknown(content: unknown, context: RenderContentContext): React.R
 function isLegacyElementLike(
   value: unknown
 ): value is { type: React.ElementType; props?: unknown; key?: string | number | null } {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'type' in value &&
-    'props' in value &&
-    '$$typeof' in value
-  );
+  return typeof value === 'object' && value !== null && 'type' in value && 'props' in value && '$$typeof' in value;
 }
 
-export function getChannelType(
-  channelType: ChannelType
-): 'channel' | 'voice' | 'thread' | 'forum' {
-  switch (channelType) {
-    case ChannelType.GuildVoice:
-    case ChannelType.GuildStageVoice:
-      return 'voice';
-    case ChannelType.PublicThread:
-    case ChannelType.PrivateThread:
-    case ChannelType.AnnouncementThread:
-      return 'thread';
-    case ChannelType.GuildForum:
-      return 'forum';
-    default:
-      return 'channel';
+export function getChannelType(channelType: ChannelType): 'channel' | 'voice' | 'thread' | 'forum' {
+  if (channelType === ChannelType.GuildVoice || channelType === ChannelType.GuildStageVoice) return 'voice';
+
+  if (
+    channelType === ChannelType.PublicThread ||
+    channelType === ChannelType.PrivateThread ||
+    channelType === ChannelType.AnnouncementThread
+  ) {
+    return 'thread';
   }
+
+  if (channelType === ChannelType.GuildForum) return 'forum';
+  return 'channel';
 }

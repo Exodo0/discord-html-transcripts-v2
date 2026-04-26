@@ -11,31 +11,16 @@ function getAttachmentType(attachment: AttachmentType): AttachmentTypes {
   return 'file';
 }
 
-/**
- * Renders all message-level attachments in a DiscordAttachments slot.
- */
-export async function Attachments({
-  message,
-  context,
-}: {
-  message: Message;
-  context: RenderMessageContext;
-}) {
+export async function Attachments({ message, context }: { message: Message; context: RenderMessageContext }) {
   if (message.attachments.size === 0) return null;
 
-  return (
-    <DiscordAttachments slot="attachments">
-      {message.attachments.map((attachment, id) => (
-        <Attachment key={id} attachment={attachment} message={message} context={context} />
-      ))}
-    </DiscordAttachments>
+  const renderedAttachments = await Promise.all(
+    message.attachments.map((attachment) => Attachment({ attachment, message, context }))
   );
+
+  return <DiscordAttachments slot="attachments">{renderedAttachments}</DiscordAttachments>;
 }
 
-/**
- * Renders a single message attachment.
- * Images are optionally downloaded and inlined as base64 data URLs.
- */
 export async function Attachment({
   attachment,
   context,

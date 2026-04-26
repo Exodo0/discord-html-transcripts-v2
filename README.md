@@ -76,21 +76,21 @@ await logChannel.send({ files: [attachment] });
 
 Fetches messages from a text channel and returns an HTML transcript.
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `returnType` | `ExportReturnType` | `Attachment` | `Attachment` \| `Buffer` \| `String` |
-| `filename` | `string` | `transcript-{id}.html` | Output file name |
-| `limit` | `number` | `-1` (all) | Max messages to fetch |
-| `filter` | `(msg) => boolean` | — | Filter messages before render |
-| `sortType` | `'ASC' \| 'DESC'` | `'ASC'` | Message sort order |
-| `includePinnedMessages` | `boolean` | `false` | Append pinned messages not in the main fetch |
-| `saveImages` | `boolean` | `false` | Download & inline images as base64 |
-| `poweredBy` | `boolean` | `true` | Show "Powered by" footer link |
-| `footerText` | `string` | `'Exported {number} message{s}.'` | Footer text. Supports `{number}`, `{s}`, and any `metadata` key |
-| `metadata` | `Record<string, string>` | `{}` | Extra tokens for `footerText` interpolation |
-| `favicon` | `'guild' \| string` | `'guild'` | Favicon URL or `'guild'` for guild icon |
-| `hydrate` | `boolean` | `false` | Full SSR (no CDN script needed) |
-| `callbacks` | `Partial<RenderCallbacks>` | — | Override channel/user/role/image resolvers |
+| Option                  | Type                       | Default                           | Description                                                     |
+| ----------------------- | -------------------------- | --------------------------------- | --------------------------------------------------------------- |
+| `returnType`            | `ExportReturnType`         | `Attachment`                      | `Attachment` \| `Buffer` \| `String`                            |
+| `filename`              | `string`                   | `transcript-{id}.html`            | Output file name                                                |
+| `limit`                 | `number`                   | `-1` (all)                        | Max messages to fetch                                           |
+| `filter`                | `(msg) => boolean`         | —                                 | Filter messages before render                                   |
+| `sortType`              | `'ASC' \| 'DESC'`          | `'ASC'`                           | Message sort order                                              |
+| `includePinnedMessages` | `boolean`                  | `false`                           | Append pinned messages not in the main fetch                    |
+| `saveImages`            | `boolean`                  | `false`                           | Download & inline images as base64                              |
+| `poweredBy`             | `boolean`                  | `true`                            | Show "Powered by" footer link                                   |
+| `footerText`            | `string`                   | `'Exported {number} message{s}.'` | Footer text. Supports `{number}`, `{s}`, and any `metadata` key |
+| `metadata`              | `Record<string, string>`   | `{}`                              | Extra tokens for `footerText` interpolation                     |
+| `favicon`               | `'guild' \| string`        | `'guild'`                         | Favicon URL or `'guild'` for guild icon                         |
+| `hydrate`               | `boolean`                  | `false`                           | Full SSR (no CDN script needed)                                 |
+| `callbacks`             | `Partial<RenderCallbacks>` | —                                 | Override channel/user/role/image resolvers                      |
 
 ### `generateFromMessages(messages, channel, options?)`
 
@@ -133,8 +133,8 @@ import { TranscriptImageDownloader } from 'discord-html-transcripts-v2';
 const attachment = await transcripts.createTranscript(channel, {
   callbacks: {
     resolveImageSrc: new TranscriptImageDownloader()
-      .withMaxSize(2048)       // KB — skip images larger than 2 MB
-      .withTimeout(8000)       // ms — fall back to URL after 8 s
+      .withMaxSize(2048) // KB — skip images larger than 2 MB
+      .withTimeout(8000) // ms — fall back to URL after 8 s
       .withCompression(75, true) // quality 75, convert to WebP
       .build(),
   },
@@ -167,18 +167,19 @@ DEBUG=discord-html-transcripts:* node your-bot.js
 
 Individual namespaces:
 
-| Namespace | Description |
-|---|---|
-| `discord-html-transcripts:renderer` | HTML render pipeline |
-| `discord-html-transcripts:generate` | Message transform & resolve |
-| `discord-html-transcripts:createTranscript` | Fetch loop |
-| `discord-html-transcripts:TranscriptImageDownloader` | Image download |
+| Namespace                                            | Description                 |
+| ---------------------------------------------------- | --------------------------- |
+| `discord-html-transcripts:renderer`                  | HTML render pipeline        |
+| `discord-html-transcripts:generate`                  | Message transform & resolve |
+| `discord-html-transcripts:createTranscript`          | Fetch loop                  |
+| `discord-html-transcripts:TranscriptImageDownloader` | Image download              |
 
 ---
 
 ## Changelog
 
 ### v4.0.0
+
 - **New architecture** — fully modular (`core/`, `renderer/`, `styles/`, `utils/`)
 - **Auto-detection of V2 Component messages** — no config needed
 - **`sortType`** option added to `CreateTranscriptOptions`
