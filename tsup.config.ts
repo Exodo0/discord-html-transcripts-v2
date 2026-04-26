@@ -24,7 +24,7 @@ export default defineConfig({
     'discord.js',
     'react',
     'react-dom',
-    'react-dom/static',
+    'react-dom/server',
     '@derockdev/discord-components-core',
     '@derockdev/discord-components-core/hydrate',
     '@derockdev/discord-components-react',

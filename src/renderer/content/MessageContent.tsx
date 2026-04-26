@@ -77,9 +77,12 @@ export default async function MessageContent({
   );
 
   // Large emoji detection: only emojis (and whitespace) in the message + ≤ 25 of them
-  const emojiNodes = parsed.filter((n) => n.type === 'emoji' || n.type === 'twemoji');
+  const emojiNodes = parsed.filter(
+    (n: SingleASTNode) => n.type === 'emoji' || n.type === 'twemoji'
+  );
   const onlyEmojis = parsed.every(
-    (n) => n.type === 'emoji' || n.type === 'twemoji' || (n.type === 'text' && !n.content.trim())
+    (n: SingleASTNode) =>
+      n.type === 'emoji' || n.type === 'twemoji' || (n.type === 'text' && !String(n.content).trim())
   );
   const largeEmojis = onlyEmojis && emojiNodes.length > 0 && emojiNodes.length <= 25;
 

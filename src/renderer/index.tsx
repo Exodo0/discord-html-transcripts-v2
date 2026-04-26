@@ -1,10 +1,9 @@
 import { type Awaitable, type Channel, type Message, type Role, type User } from 'discord.js';
-import { prerenderToNodeStream } from 'react-dom/static';
+import { renderToStaticMarkup } from 'react-dom/server';
 import React from 'react';
 import { renderToString } from '@derockdev/discord-components-core/hydrate';
 import { buildProfiles } from '../utils/buildProfiles';
 import { scrollToMessage, revealSpoiler } from '../static/client';
-import { streamToString } from '../utils/utils';
 import TranscriptRoot from './transcript';
 import type { ResolveImageCallback } from '../downloader/images';
 import debug from 'debug';
@@ -66,7 +65,8 @@ export default async function renderHtml({
     ? 'Direct Messages'
     : (channel as { name?: string }).name ?? 'Transcript';
 
-  const { prelude } = await prerenderToNodeStream(
+  const markup = '<!DOCTYPE html>' +
+    renderToStaticMarkup(
     <html>
       <head>
         <meta charSet="utf-8" />
@@ -110,8 +110,6 @@ export default async function renderHtml({
       )}
     </html>
   );
-
-  const markup = await streamToString(prelude);
 
   if (options.hydrate) {
     log('Hydrating markup server-side');

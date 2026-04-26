@@ -44,15 +44,3 @@ export function numberToHexColor(color: number): string {
   return `#${color.toString(16).padStart(6, '0')}`;
 }
 
-/**
- * Converts a Node.js ReadableStream to a UTF-8 string.
- */
-export function streamToString(stream: NodeJS.ReadableStream): Promise<string> {
-  const chunks: Buffer[] = [];
-
-  return new Promise<string>((resolve, reject) => {
-    stream.on('data', (chunk: Buffer) => chunks.push(chunk));
-    stream.on('error', reject);
-    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-  });
-}

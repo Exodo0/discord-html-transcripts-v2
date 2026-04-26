@@ -20,21 +20,32 @@ npm install discord-html-transcripts-v2
 **Required peer dependencies**:
 
 ```bash
-pnpm add discord.js react react-dom
+pnpm add discord.js react@^18.2.0 react-dom@^18.2.0
+# or
+npm install discord.js react@^18.2.0 react-dom@^18.2.0
 ```
 
 > [!TIP]
 > Recommended one-shot install:
 >
 > ```bash
-> pnpm add discord-html-transcripts-v2 discord.js react react-dom
+> pnpm add discord-html-transcripts-v2 discord.js react@^18.2.0 react-dom@^18.2.0
+> ```
+
+> `npm` equivalent:
+>
+> ```bash
+> npm install discord-html-transcripts-v2 discord.js react@^18.2.0 react-dom@^18.2.0
 > ```
 
 > [!NOTE]
 > Keeping `react` and `react-dom` as peer dependencies avoids bundling duplicate React copies into downstream bots and apps.
 
 > [!WARNING]
-> If you upgrade to `discord-html-transcripts-v2@4` without also having `react` and `react-dom` installed, installation or runtime usage may fail depending on your package manager and setup.
+> If you upgrade to `discord-html-transcripts-v2@4` without also having `react` and `react-dom` installed, or if you install React 19, installation may warn because upstream rendering dependencies currently target React 18.
+
+> [!TIP]
+> If your users report missing peer dependency warnings, tell them to install `react@^18.2.0` and `react-dom@^18.2.0` in the same project where they install `discord-html-transcripts-v2`.
 
 ---
 
