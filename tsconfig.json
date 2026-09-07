@@ -13,6 +13,7 @@
     "alwaysStrict": true,
     "noUnusedLocals": true,
     "outDir": "dist",
+    "rootDir": "./src",
     "sourceMap": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -25,7 +26,8 @@
     "jsx": "react",
     "incremental": true,
     "declaration": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src"],
   "exclude": ["node_modules"]
