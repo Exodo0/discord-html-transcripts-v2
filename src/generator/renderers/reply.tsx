@@ -1,11 +1,12 @@
 import { DiscordReply } from '@derockdev/discord-components-react';
-import { type Message, UserFlags } from 'discord.js';
+import { MessageReferenceType, type Message, UserFlags } from 'discord.js';
 import type { RenderMessageContext } from '..';
 import React from 'react';
 import MessageContent, { RenderType } from './content';
 
 export default async function MessageReply({ message, context }: { message: Message; context: RenderMessageContext }) {
   if (!message.reference) return null;
+  if (message.reference.type === MessageReferenceType.Forward) return null;
   if (message.reference.guildId !== message.guild?.id) return null;
 
   const referencedMessage = context.messages.find((m) => m.id === message.reference!.messageId);

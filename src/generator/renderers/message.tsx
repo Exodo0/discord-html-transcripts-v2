@@ -15,6 +15,7 @@ import { Attachments } from './attachment';
 import ComponentRow from './components';
 import MessageContent, { RenderType } from './content';
 import { DiscordEmbed } from './embed';
+import ForwardedSnapshots from './forwarded';
 import MessageReply from './reply';
 import DiscordSystemMessage from './systemMessage';
 
@@ -68,6 +69,9 @@ export default async function DiscordMessage({
         message.embeds.map((embed, id) => (
           <DiscordEmbed embed={embed} context={{ ...context, index: id, message }} key={id} />
         ))}
+
+      {/* forwarded message snapshots */}
+      <ForwardedSnapshots message={message} context={context} />
 
       {/* components */}
       {message.components.length > 0 && (
